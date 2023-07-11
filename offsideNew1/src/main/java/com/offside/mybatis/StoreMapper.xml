@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="store">
+
+	<select id="storeList" resultType="Store">
+		SELECT * FROM off_match
+	</select>
+
+	<!-- <select id="storeDetail" resultType="Store"> SELECT * FROM off_match 
+		WHERE matchId = #{matchId } </select> -->
+	<select id="storeDetail" resultType="Store">
+		SELECT *
+		FROM off_match M
+		LEFT JOIN (
+		SELECT matchId, 1 AS IS_LIKES
+		FROM off_LIKES
+		WHERE Id = #{Id} AND matchId = #{matchId}
+		) L ON M.matchId = L.matchId
+	</select>
+
+	<insert id="reviewWrite">
+		INSERT INTO off_REVIEW (
+		ORDER_NUM
+		,STORE_ID
+		,REVIEW_CONTENT
+		,USER_ID
+		,SCORE
+		,REVIEW_IMG
+		) VALUES (
+		${orderNum }
+		,#{storeId }
+		,#{reviewContent }
+		,#{userId}
+		,#{score}
+		,#{reviewImg }
+		)
+	</insert>
+
+	<select id="reviewList" resultType="Review">
+		SELECT
+		r.order_num,
+		r.store_id,
+		r.review_content,
+		r.boss_comment,
+		r.regi_date,
+		r.score,
+		r.review_img,
+		r.user_id,
+		u.nickname
+		FROM
+		off_review r
+		LEFT JOIN
+		off_user u
+		ON
+		r.user_id = u.id
+		WHERE
+		r.store_id = #{id}
+		ORDER BY
+		regi_date DESC
+	</select>
+	<!-- <select id="storeDetail" resultType="Store"> SELECT RESULT.* ,CASE 
+		WHEN TO_CHAR(SYSDATE,'HH24') BETWEEN OPENING_TIME AND OPENING_TIME + BS_TIME 
+		THEN 'true' ELSE 'false' END IS_OPEN FROM (SELECT S.*, C.*, CASE WHEN MOD(24 
+		- S.OPENING_TIME + S.CLOSING_TIME, 24) != 0 THEN MOD(24 - S.OPENING_TIME 
+		+ S.CLOSING_TIME, 24) ELSE 24 END BS_TIME FROM BM_STORE S ,(SELECT * FROM 
+		(SELECT ROUND(AVG(SCORE),1) SCORE ,COUNT(REVIEW_CONTENT) REVIEW_COUNT ,COUNT(BOSS_COMMENT) 
+		BOSS_COMMENT_COUNT ,COUNT(CASE WHEN SCORE=1 THEN 1 END) SCORE1 ,COUNT(CASE 
+		WHEN SCORE=2 THEN 1 END) SCORE2 ,COUNT(CASE WHEN SCORE=3 THEN 1 END) SCORE3 
+		,COUNT(CASE WHEN SCORE=4 THEN 1 END) SCORE4 ,COUNT(CASE WHEN SCORE=5 THEN 
+		1 END) SCORE5 FROM BM_REVIEW WHERE STORE_ID = #{id } ) ,(SELECT SUM(ORDER_COUNT) 
+		ORDER_COUNT FROM ( SELECT COUNT(*) ORDER_COUNT FROM BM_ORDER_USER WHERE STORE_ID 
+		= #{id } UNION ALL SELECT COUNT(*) ORDER_COUNT FROM BM_ORDER_NON_USER WHERE 
+		STORE_ID = #{id } )) ) C WHERE ID = #{id } ) RESULT </select> -->
+
+	<!-- 상품 정보 -->
+	<select id="getGoodsInfo" resultType="com.offside.dto.MatchVO">
+
+		select a.matchID,
+		a.matchNAME, a.groundId, b.groundNAME, a.matchDate,
+		a.matchOwner,
+		a.CATECODE, c.CATENAME, a.matchPRICE, a.matchSTOCK,
+		a.matchDISCOUNT,
+		a.matchINTRO, a.matchCONTENTS
+		from off_match a left outer join
+		off_ground b on a.groundId = b.groundId
+		left outer join off_mcate c on
+		a.catecode = c.catecode
+		where matchid = ${matchId}
+
+	</select>
+
+	<insert id="addLikes">
+		INSERT INTO off_LIKES (
+		Id
+		,matchId
+		) VALUES (
+		#{Id }
+		,#{matchId }
+		)
+	</insert>
+
+	<delete id="deleteLikes">
+		DELETE off_LIKES WHERE
+		Id = #{Id } AND
+		matchId =
+		#{matchId }
+	</delete>
+</mapper>

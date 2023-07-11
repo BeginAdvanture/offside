@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin">
+	<insert id="enroll">
+
+		insert into off_ground(groundId,groundName, nationId)
+		values(ground_seq.nextval,#{groundName}, #{nationId})
+
+	</insert>
+
+	<!-- 작가 목록 -->
+	<select id="groundGetList" resultType="com.offside.dto.GroundVO">
+      
+      <![CDATA[
+          select * from (
+              select /*+INDEX_DESC(off_ground 인덱스명) */ 
+                  rownum as rn, groundid, groundname, nationid, regdate, updatedate
+            from off_ground 
+            where
+             
+    ]]>
+		<if test="keyword != null">
+			groundname like '%'||#{keyword}||'%' and
+		</if>
+            
+    <![CDATA[        
+             rownum <= #{pageNum}*#{amount}
+            )
+        where rn > (#{pageNum} - 1) * #{amount}
+      ]]>
+
+	</select>
+	<!-- Oracle -->
+
+	<select id="groundGetTotal" resultType="int">
+
+		select count(*) from off_ground
+
+		<if test="keyword != null">
+
+			where groundname like '%' || #{keyword} || '%'
+
+		</if>
+
+	</select>
+
+	<!--경기장 삭제 -->
+	<delete id="groundDelete">
+
+		delete from off_ground where groundId = #{groundId}
+
+	</delete>
+
+	<select id="cateList" resultType="com.offside.dto.CateVO">
+
+		select * from off_mcate order
+		by catecode
+
+	</select>
+
+	<!-- 매치 등록 -->
+	<insert id="matchEnroll">
+		<selectKey resultType="int" keyProperty="matchId"
+			order="BEFORE">
+			SELECT match_seq.nextval FROM dual
+		</selectKey>
+
+		insert into off_match(matchId, matchName, groundId, matchDate,
+		matchOwner, cateCode, matchPrice, matchStock, matchDiscount,
+		matchIntro, matchContents,address1,address2,address3,category)
+		values(#{matchId}, #{matchName}, #{groundId}, #{matchDate},
+		#{matchOwner}, #{cateCode}, #{matchPrice}, #{matchStock},
+		#{matchDiscount}, #{matchIntro},
+		#{matchContents},#{address1},#{address2},#{address3},#{category})
+	</insert>
+
+	<insert id="imageEnroll">
+		<selectKey resultType="int" keyProperty="matchId"
+			order="AFTER">
+			SELECT MAX(matchId) FROM off_match
+		</selectKey>
+
+		insert into off_image(matchId, fileName, uploadPath, uuid)
+		values
+		(#{matchId}, #{fileName}, #{uploadPath}, #{uuid})
+	</insert>
+
+
+	<select id="matchList" resultType="com.offside.dto.MatchVO">
+		select * from off_match
+	</select>
+
+	<delete id="matchDelete" parameterType="int">
+		DELETE FROM off_match WHERE matchId = #{matchId};
+
+	</delete>
+	<!-- 주문 리스트 -->
+	<select id="getOrderList" resultType="com.offside.dto.OrderDTO">
+		<![CDATA[
+		select * 
+		from(
+		    select rownum rn, orderId, Id, orderstate, orderdate
+		    from off_order
+		    where rownum <= #{pageNum} * #{amount} 
+		]]>
+		
+		<![CDATA[
+		    
+		    order by orderdate desc
+		    )
+		where rn > (#{pageNum} -1) * #{amount}
+		]]>
+	</select>
+
+	<!-- 상품 총 개수 -->
+	<select id="getOrderTotal" resultType="int">
+
+		select count(*) from off_order
+
+	
+
+	</select>
+</mapper>

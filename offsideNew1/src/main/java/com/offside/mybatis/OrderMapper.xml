@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Order">
+	<!-- 주문 상품 정보 -->
+	<select id="getMatchInfo" resultType="com.offside.dto.OrderPageMatchDTO">
+	
+		select matchId, matchName, matchPrice, matchDiscount
+		from off_match where matchId = #{matchId}	
+	
+	</select>
+	<!-- 주문자 정보 -->
+  	<select id="getMemberInfo" resultType="com.offside.dto.User">
+  	
+  		SELECT Id, username, email, nickname, point, phone
+  		FROM off_user 
+  		WHERE id = #{id}
+  	
+  	</select>
+  	
+  	
+  	<select id="getOrderInfo" resultType="com.offside.dto.OrderItemDTO">
+	
+		select matchId, matchPrice, matchDiscount
+		from off_match where matchId = #{matchId}
+	
+	</select>
+	
+	<!-- 주문 테이블 등록 -->
+	<insert id="enrollOrder">
+	
+		insert into off_order(orderId, id, orderState, usePoint)
+    	values(#{orderId},#{id}, '인원모집중', #{usePoint})
+	
+	</insert>
+	
+	<!-- 주문 아이템 테이블 등록 -->
+	<insert id="enrollOrderItem">
+	
+		insert into off_orderItem(orderItemId,orderId, matchId, matchPrice, matchDiscount, savePoint)
+		values(order_ID_SEQ.nextval,#{orderId}, #{matchId}, #{matchPrice}, #{matchDiscount}, #{savePoint})
+	
+	</insert>
+	
+
+	
+	<!-- 주문 재고 차감 -->
+	<update id="deductStock">
+	
+		update off_match set matchStock = #{matchStock} where matchId = #{matchId}
+	
+	</update>
+</mapper>
